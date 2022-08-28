@@ -1,23 +1,13 @@
-import sys
-
-# class Node:
-#     def __init__(self, data, left, right):
-#         self.data = data
-#         self.left = left
-#         self.right = right
-
 def in_order(node):
-    print("node2", node_list[i])
-    print("node2", node_list[i][2])
-    if node_list[i][2] != None:
-        in_order(node_list[i][2])
-    print(node_list[i][1], end='')
-    if node_list[i][3] != None:
-        in_order(node_list[i][3])
+    if node[2] != -1:
+        in_order(node_list[int(node[2])-1])
+    print(node[1], end='')
+    if node[3] != -1:
+        in_order(node_list[int(node[3])-1])
 
-for _ in range(10):
+for k in range(10):
     N = int(input())
-    node_list = [[i+1, '', None, None] for i in range(N)]
+    node_list = [[i+1, '', -1, -1] for i in range(N)]
 
     for i in range(N):
         node = input()
@@ -28,6 +18,7 @@ for _ in range(10):
             node_list[i][2] = node[2]
         if len(node) >= 4:
             node_list[i][3] = node[3]
-        print(node_list[2])
 
-        in_order(node_list[N])
+    print("#{} ".format(k+1), end='')
+    in_order(node_list[0])
+    print()
