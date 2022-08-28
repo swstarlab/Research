@@ -4,15 +4,16 @@ dx = [-1, 1, 0, 0]
 dy = [0, 0, -1, 1]
 
 # BFS 소스코드 구현
-def bfs(_graph, _visited_list):
+def bfs(_graph):
     # 큐(Queue) 구현을 위해 deque 라이브러리 사용
+    _visited_list = [[False for _ in range(width)] for _ in range(width)]
     x, y = 0, 0
     queue = deque()
     queue.append((x, y))
     _visited_list[x][y] = True
+    print("visited_list[0][0]:", _visited_list[x][y])
     price = 0
     price_list = []
-    dest = [width, width]
     # 큐가 빌 때까지 반복하기
     while queue:
         x, y = queue.popleft()
@@ -54,10 +55,6 @@ if __name__ == "__main__":
         visited_list = []
         for _ in range(width):
             graph.append(list(map(int, input())))
-        for _ in range(width):
-            visited.append(False)
-        for _ in range(width):
-            visited_list.append(visited)
 
-        print("graph, visited_list:", graph, visited_list)
-        print(bfs(graph, visited_list))
+        print("graph:", graph)
+        print(bfs(graph))
