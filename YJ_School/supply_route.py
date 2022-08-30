@@ -1,7 +1,7 @@
 from collections import deque
-# 이동할 네 가지 방향 정의 (상, 하, 좌, 우)
-dx = [-1, 1, 0, 0]
-dy = [0, 0, -1, 1]
+# 이동할 네 가지 방향 정의 (하, 우, 상, 좌)
+dx = [1, 0, -1, 0]
+dy = [0, 1, 0, -1]
 
 # BFS 소스코드 구현
 def bfs(_graph):
@@ -11,13 +11,13 @@ def bfs(_graph):
     queue = deque()
     queue.append((x, y))
     _visited_list[x][y] = True
-    print("visited_list[0][0]:", _visited_list[x][y])
     price = 0
     price_list = []
     # 큐가 빌 때까지 반복하기
     while queue:
         x, y = queue.popleft()
         # 현재 위치에서 4가지 방향으로의 위치 확인
+
         for i in range(4):
             nx = x + dx[i]
             ny = y + dy[i]
@@ -25,22 +25,17 @@ def bfs(_graph):
             if nx < 0 or nx >= width or ny < 0 or ny >= width:
                 continue
 
-            # if not visited_list[dest]:
-            #     visited_list[dest] = True
-            #     queue.append(dest)
-
-            if nx == width and ny == width:
+            if _visited_list[width-1][width-1] == True:
                 break
 
             if _visited_list[nx][ny] == False:
                 _visited_list[nx][ny] = True
                 queue.append((nx, ny))
                 price += _graph[nx][ny]
-                print("price:", price)
+                break
 
-            price_list.append(price)
-
-        print("price_list:", price_list)
+    price_list.append(price)
+    print(price_list)
     # 가장 오른쪽 아래까지의 최단 거리 반환
 
 
@@ -56,5 +51,4 @@ if __name__ == "__main__":
         for _ in range(width):
             graph.append(list(map(int, input())))
 
-        print("graph:", graph)
         print(bfs(graph))
