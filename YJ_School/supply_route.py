@@ -6,13 +6,13 @@ dy = [0, 1, 0, -1]
 # BFS 소스코드 구현
 def bfs(_graph):
     # 큐(Queue) 구현을 위해 deque 라이브러리 사용
-    _visited_list = [[False for _ in range(width)] for _ in range(width)]
+    INF = float('inf')
     x, y = 0, 0
     queue = deque()
+    distance = [[INF for _ in range(width)] for _ in range(width)]
     queue.append((x, y))
-    _visited_list[x][y] = True
-    price = 0
-    price_list = []
+    distance[x][y] = 0
+
     # 큐가 빌 때까지 반복하기
     while queue:
         x, y = queue.popleft()
@@ -25,17 +25,11 @@ def bfs(_graph):
             if nx < 0 or nx >= width or ny < 0 or ny >= width:
                 continue
 
-            if _visited_list[width-1][width-1] == True:
-                break
-
-            if _visited_list[nx][ny] == False:
-                _visited_list[nx][ny] = True
+            if distance[nx][ny] > distance[x][y] + _graph[nx][ny]:
+                distance[nx][ny] = distance[x][y] + _graph[nx][ny]
                 queue.append((nx, ny))
-                price += _graph[nx][ny]
-                break
 
-    price_list.append(price)
-    print(price_list)
+    return distance[width-1][width-1]
     # 가장 오른쪽 아래까지의 최단 거리 반환
 
 
@@ -43,12 +37,10 @@ def bfs(_graph):
 if __name__ == "__main__":
     test_case = int(input())
     # 2차원 리스트의 맵 정보 입력 받기
-    for _ in range(test_case):
+    for k in range(test_case):
         width = int(input())
         graph = []
-        visited = []
-        visited_list = []
         for _ in range(width):
             graph.append(list(map(int, input())))
 
-        print(bfs(graph))
+        print("#{} {}" .format(k+1, bfs(graph)))
