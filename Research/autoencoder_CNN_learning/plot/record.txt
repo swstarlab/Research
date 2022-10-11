@@ -1,0 +1,7 @@
+2022-10-11 16:47:15.573132
+[Train Epoch 1]
+cnt_over_thres 23438
+cnt_under_thres 36562
+Ask_rate: 0.39063333333333333
+Threshold: 0.05
+[Test Epoch: 1] Test Loss: 0.6652, Accuracy: 92.43%
