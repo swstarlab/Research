@@ -17,8 +17,8 @@ from tqdm import tqdm
 
 
 # 하이퍼파라미터
-EPOCH = 3
-BATCH_SIZE = 1
+EPOCH = 10
+BATCH_SIZE = 64
 USE_CUDA = torch.cuda.is_available()
 DEVICE = torch.device("cuda" if USE_CUDA else "cpu")
 
@@ -152,7 +152,7 @@ if __name__=='__main__':
         AE_Loss_List = []
         CNN_Loss_List = []
 
-        sys.stdout = open('./plot/03/record03.txt', 'a')
+        sys.stdout = open('./plot/04/record04.txt', 'a')
         print(datetime.now())
         print("Threshold:", threshold)
         for epoch in tqdm(range(1, EPOCH+1)):
@@ -289,6 +289,6 @@ if __name__=='__main__':
     plt.legend()
 
     plt.tight_layout()
-    plt.savefig('./plot/03/threshold{:.2f} epoch{:.2f}.png'.format(threshold, epoch))
+    plt.savefig('./plot/04/threshold{:.2f} epoch{:.2f}.png'.format(threshold, epoch))
     plt.close()
 
