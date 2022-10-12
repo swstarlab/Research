@@ -6,15 +6,33 @@ from torchvision import transforms, datasets
 from multiprocessing import freeze_support
 import torch.nn.functional as F
 from torch.utils.data import Dataset
-from PIL import Image
 import random
 
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
 from datetime import datetime
-from tqdm import tqdm
 
+#Robot import
+from __future__ import print_function
+import rospy
+import math
+from sensor_msgs.msg import Image, PointCloud2, JointState
+from std_msgs.msg import Int32MultiArray
+from cv_bridge import CvBridge
+from geometry_msgs.msg import WrenchStamped
+import ros_numpy
+from hsrb_interface import Robot
+import trajectory_msgs.msg
+from hsrb_interface import geometry
+import controller_manager_msgs.srv
+from std_msgs.msg import Int16
+import time
+import copy
+from tmc_manipulation_msgs.srv import (
+    SafeJointChange,
+    SafeJointChangeRequest
+)
 
 # 하이퍼파라미터
 EPOCH = 3
@@ -142,7 +160,7 @@ if __name__=='__main__':
 
     #threshold
     threshold = 0.02
-    for _ in tqdm(range(0, 20)):
+    for _ in range(0, 20):
         threshold += 0.001
         threshold_List.append(threshold)
         cnt_over_thres = 0
