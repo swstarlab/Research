@@ -136,21 +136,22 @@ if __name__=='__main__':
     random.seed(random_seed)  # random
 
     #threshold
-    threshold = 0.
-    for _ in range(0, 10):
-        threshold += 0.01
+    threshold = 0.02
+    for _ in range(0, 20):
+        threshold += 0.001
         cnt_over_thres = 0
         cnt_under_thres = 0
         crr_cnt_over_thres = 0
         crr_cnt_under_thres = 0
         AE_Loss_List = []
         crr_ask_rate_List = []
-
         CNN_Loss_List = []
+
+        sys.stdout = open('./plot/02/record02.txt', 'a')
+        print(datetime.now())
+        print("Threshold:", threshold)
         for epoch in range(1, EPOCH+1):
             for step, (data, target) in enumerate(train_loader):
-
-
                 model.eval()
                 data, target = data.to(DEVICE), target.to(DEVICE)
 
@@ -239,7 +240,7 @@ if __name__=='__main__':
                     crr_cnt_under_thres += 1
 
 
-                if step % 2000 == 0:
+                if step % 12000 == 0:
                     crr_ask_rate = crr_cnt_over_thres / (crr_cnt_over_thres + crr_cnt_under_thres)
                     print('Train Epoch: {} [{}/{} ({:.0f}%)]\tAE_Loss: {:.6f}\tCNN_Loss: {:.6f}\tAsk_rate: {:.6f}'.format(
                         epoch, step * len(data), len(train_loader.dataset),
@@ -253,28 +254,28 @@ if __name__=='__main__':
             ask_rate = cnt_over_thres / (cnt_over_thres + cnt_under_thres)
             #에폭과 Loss_value 출력
 
-            sys.stdout = open('./plot/record.txt', 'a')
-            print(datetime.now())
-            print("[Train Epoch {}]".format(epoch))
-            print("cnt_over_thres", cnt_over_thres)
-            print("cnt_under_thres", cnt_under_thres)
+            test_loss, test_accuracy = evaluate(model, test_loader)
+
+            print("[Epoch {}]".format(epoch))
+            print("cnt_over_thres:", cnt_over_thres)
+            print("cnt_under_thres:", cnt_under_thres)
             print("Ask_rate: {:.6f}" .format(ask_rate))
+            print('Test Loss: {:.4f}, Accuracy: {:.2f}%'.format(test_loss, test_accuracy))
 
-        #성능 평가
-        test_loss, test_accuracy = evaluate(model, test_loader)
+            fig1 = plt.subplot(2,1,1)
+            plt.plot(AE_Loss_List, label="AE_Loss", color='red', linestyle="-")
+            plt.plot(CNN_Loss_List, label="CNN_Loss", color='blue', linestyle="-")
+            plt.title('Loss(threshold{:.2f}, epoch{:.2f}'.format(threshold, epoch))
+            plt.ylabel('Loss')
+            plt.legend()
 
-        print("Threshold:", threshold)
-        print('Test Loss: {:.4f}, Accuracy: {:.2f}%'.format(
-            test_loss, test_accuracy))
+            fig2 = plt.subplot(2,1,2)
+            plt.plot(crr_ask_rate_List, label="Ask_rate", color='green', linestyle="-")
+            plt.title('Ask rate(threshold{:.2f}, epoch{:.2f}'.format(threshold, epoch))
+            plt.ylabel('rate')
+            plt.legend()
 
-        plt.plot(AE_Loss_List, label="AE_Loss", color='red', linestyle="-")
-        plt.plot(CNN_Loss_List, label="CNN_Loss", color='blue', linestyle="-")
-        plt.ylabel('loss')
-        plt.legend()
-        plt.savefig('./plot/Loss at threshold {}.png' .format(threshold))
-
-        plt.plot(crr_ask_rate_List, label="Ask_rate", color='green', linestyle="-")
-        plt.ylabel('rate')
-        plt.legend()
-        plt.savefig('./plot/ask_rate at threshold{}.png'.format(threshold))
+            plt.tight_layout()
+            plt.savefig('./plot/02/threshold{:.2f} epoch{:.2f}.png'.format(threshold, epoch))
+            plt.close()
 
