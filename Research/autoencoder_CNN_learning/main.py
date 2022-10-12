@@ -155,7 +155,7 @@ if __name__=='__main__':
         sys.stdout = open('./plot/03/record03.txt', 'a')
         print(datetime.now())
         print("Threshold:", threshold)
-        for epoch in range(1, EPOCH+1):
+        for epoch in tqdm(range(1, EPOCH+1)):
             for step, (data, target) in enumerate(train_loader):
                 model.eval()
                 data, target = data.to(DEVICE), target.to(DEVICE)
