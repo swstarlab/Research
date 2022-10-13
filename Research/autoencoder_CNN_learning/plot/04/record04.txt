@@ -1,0 +1,65 @@
+2022-10-12 21:27:46.989786
+Threshold: 0.021
+[Epoch 1]
+cnt_over_thres: 934
+cnt_under_thres: 3
+Ask_rate: 0.996798
+Test Loss: 0.1932, Accuracy: 93.81%
+[Epoch 2]
+cnt_over_thres: 1267
+cnt_under_thres: 607
+Ask_rate: 0.676094
+Test Loss: 0.5350, Accuracy: 87.48%
+[Epoch 3]
+cnt_over_thres: 1274
+cnt_under_thres: 1537
+Ask_rate: 0.453219
+Test Loss: 2.2394, Accuracy: 80.02%
+[Epoch 4]
+cnt_over_thres: 1274
+cnt_under_thres: 2474
+Ask_rate: 0.339915
+Test Loss: 41.0030, Accuracy: 10.06%
+[Epoch 5]
+cnt_over_thres: 1274
+cnt_under_thres: 3411
+Ask_rate: 0.271932
+Test Loss: 46.8637, Accuracy: 10.07%
+[Epoch 6]
+cnt_over_thres: 1274
+cnt_under_thres: 4348
+Ask_rate: 0.226610
+Test Loss: 47.2031, Accuracy: 10.09%
+[Epoch 7]
+cnt_over_thres: 1274
+cnt_under_thres: 5285
+Ask_rate: 0.194237
+Test Loss: 47.4404, Accuracy: 10.09%
+[Epoch 8]
+cnt_over_thres: 1274
+cnt_under_thres: 6222
+Ask_rate: 0.169957
+Test Loss: 47.6247, Accuracy: 10.06%
+[Epoch 9]
+cnt_over_thres: 1274
+cnt_under_thres: 7159
+Ask_rate: 0.151073
+Test Loss: 47.7322, Accuracy: 10.09%
+[Epoch 10]
+cnt_over_thres: 1274
+cnt_under_thres: 8096
+Ask_rate: 0.135966
+Test Loss: 47.8504, Accuracy: 10.07%
+2022-10-12 21:29:29.042544
+Threshold: 0.022000000000000002
+[Epoch 1]
+cnt_over_thres: 0
+cnt_under_thres: 937
+Ask_rate: 0.000000
+Test Loss: 47.9564, Accuracy: 10.08%
+[Epoch 2]
+cnt_over_thres: 0
+cnt_under_thres: 1874
+Ask_rate: 0.000000
+Test Loss: 48.0082, Accuracy: 10.0
+8%
