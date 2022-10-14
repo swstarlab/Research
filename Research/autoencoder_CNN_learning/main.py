@@ -19,11 +19,10 @@ import math
 
 
 # 하이퍼파라미터
-EPOCH = 2
+EPOCH = 5
 BATCH_SIZE = 64
 USE_CUDA = torch.cuda.is_available()
 DEVICE = torch.device("cuda" if USE_CUDA else "cpu")
-Folder_number = "05"
 
 # MNIST 데이터셋
 trainset = datasets.MNIST(
@@ -148,25 +147,28 @@ if __name__=='__main__':
     Test_Accuracy_List = []
     ask_rate_List = []
     epoch_List = []
+    AE_Loss_List = []
+    CNN_Loss_List = []
+    threshold_List = []
 
     #threshold
     threshold = 0.02
     cnt_over_thres = 0
     cnt_under_thres = 0
+    cnt_cnn = 0
+    cnt_unq_cnn = 0
+    unq_CNN_loss = 2.5
+    Folder_number = "14"
 
-    # sys.stdout = open('./plot/{}/record.txt'.format(Folder_number), 'a')
+    sys.stdout = open('./plot/record{}.txt'.format(Folder_number), 'a')
     print(datetime.now())
     print("Start Threshold:", threshold)
     for epoch in tqdm(range(1, EPOCH+1)):
         crr_cnt_over_thres = 0
         crr_cnt_under_thres = 0
-        AE_Loss_List = []
-        CNN_Loss_List = []
         crr_ask_rate_List = []
         step_List = []
-        threshold_List = []
 
-        epoch_List.append(epoch)
         for step, (data, target) in enumerate(train_loader):
             model.eval()
             data, target = data.to(DEVICE), target.to(DEVICE)
@@ -243,8 +245,8 @@ if __name__=='__main__':
                 pred = output.max(1, keepdim=True)[1]
                 pred = pred.reshape(-1)
                 model.train()
-                CNN_loss = F.cross_entropy(output, pred)
-                CNN_loss.backward()
+                unq_CNN_loss = F.cross_entropy(output, pred)
+                unq_CNN_loss.backward()
                 optimizer_CNN.step()
 
                 # print(AE_Loss)
@@ -254,24 +256,16 @@ if __name__=='__main__':
                 cnt_under_thres += 1
                 crr_cnt_under_thres += 1
 
-            if CNN_loss > 4:
-                threshold = 4
+            if unq_CNN_loss < CNN_loss and threshold > 0.01:
+                threshold -= 0.0001
+                cnt_unq_cnn += 1
 
-            elif CNN_loss > 2:
-                threshold = threshold * math.log(CNN_loss.item(), 4)
 
-            elif CNN_loss >= 1:
-                pass
-
-            elif CNN_loss < 1:
-                pass
-
-            elif CNN_loss < 0.5:
-                threshold = threshold * math.log(CNN_loss.item(), 0.5)
-
+            elif unq_CNN_loss >= CNN_loss:
+                threshold += 0.0017
+                cnt_cnn += 1
 
             if step % 100 == 0:
-                print("log(CNN):", math.log2(CNN_loss.item()))
                 crr_ask_rate = crr_cnt_over_thres / (crr_cnt_over_thres + crr_cnt_under_thres)
                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tAE_Loss: {:.6f}\tCNN_Loss: {:.6f}\tAsk_rate: {:.6f}\tthreshold: {:.6f}'.format(
                     epoch, step * len(data), len(train_loader.dataset),
@@ -282,40 +276,48 @@ if __name__=='__main__':
             threshold_List.append(threshold)
             crr_ask_rate_List.append(crr_ask_rate)
             step_List.append(step)
+        threshold = AE_Loss
 
 
-        ask_rate = cnt_over_thres / (cnt_over_thres + cnt_under_thres)
+        ask_rate = 100 * cnt_over_thres / (cnt_over_thres + cnt_under_thres)
         #에폭과 Loss_value 출력
 
         test_loss, test_accuracy = evaluate(model, test_loader)
         Test_Accuracy_List.append(test_accuracy)
+        epoch_List.append(epoch)
+        ask_rate_List.append(ask_rate)
 
         print("[Epoch {}]".format(epoch))
         print("cnt_over_thres:", cnt_over_thres)
         print("cnt_under_thres:", cnt_under_thres)
-        print("Total Ask_rate: {:.6f}" .format(ask_rate))
+        print("Total Ask_rate: {:.2f}%" .format(ask_rate))
         print('Test Loss: {:.4f}, Accuracy: {:.2f}%'.format(test_loss, test_accuracy))
+        print('cnt_cnn:', cnt_cnn)
+        print('unq_cnt_cnn: ', cnt_unq_cnn)
         print()
 
-        #AE Loss & CNN Loss(per step)
-    #     fig1 = plt.subplot(2, 1, 1)
-    #     plt.plot(step_List, AE_Loss_List, label="AE_Loss", color='red', linestyle="-")
-    #     plt.plot(step_List, CNN_Loss_List, label="CNN_Loss", color='blue', linestyle="-")
-    #     plt.title('AE&CNN_Loss')
-    #     plt.xlabel('step')
-    #     plt.ylabel('Loss')
-    #     plt.legend()
-    #
-    #     #threshold(per step)
-    #     fig2 = plt.subplot(2, 1, 2)
-    #     plt.plot(step_List, threshold_List, label="Threshold", color='red', linestyle="-")
-    #     plt.plot(CNN_Loss_List, label="CNN_Loss", color='blue', linestyle="-")
-    #     plt.title('CNN_Loss&threshold')
-    #     plt.xlabel('step')
-    #     plt.ylabel('Loss')
-    #     plt.legend()
-    #
-    #     plt.show()
+        cnt_over_thres = 0
+        cnt_under_thres = 0
+        cnt_cnn = 0
+        cnt_unq_cnn = 0
+
+    # Ask_rate & test_Accuracy per epoch
+    fig1 = plt.subplot(2, 1, 1)
+    plt.plot(epoch_List, ask_rate_List, label="ask_rate", color='red', linestyle="-")
+    plt.plot(epoch_List, Test_Accuracy_List, label="test_Accuracy", color='blue', linestyle="-")
+    plt.title('Ask_rate & test_Accuracy per epoch')
+    plt.xlabel('epoch')
+    plt.ylabel('%')
+    plt.legend()
+
+    #threshold & AE_Loss(per step)
+    fig2 = plt.subplot(2, 1, 2)
+    plt.plot(AE_Loss_List, label="AE_Loss", color='red', linestyle="-")
+    plt.plot(threshold_List, label="Threshold", color='blue', linestyle="-")
+    plt.title('threshold & AE_Loss(per step)')
+    plt.legend()
+
+    plt.show()
     #
     #     plt.tight_layout()
     #     plt.savefig('./plot/{}.png'.format(epoch))
@@ -337,8 +339,8 @@ if __name__=='__main__':
     #
     # plt.show()
     #
-    # plt.tight_layout()
-    # plt.savefig('./plot/{}.png'.format(epoch))
-    # plt.close()
+    plt.tight_layout()
+    plt.savefig('./plot/{}/graph.png'.format(Folder_number))
+    plt.close()
 
 
