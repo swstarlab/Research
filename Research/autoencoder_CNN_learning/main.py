@@ -15,11 +15,10 @@ import numpy as np
 import sys
 from datetime import datetime
 from tqdm import tqdm
-import math
 
 
 # 하이퍼파라미터
-EPOCH = 5
+EPOCH = 1
 BATCH_SIZE = 64
 USE_CUDA = torch.cuda.is_available()
 DEVICE = torch.device("cuda" if USE_CUDA else "cpu")
@@ -39,7 +38,7 @@ testset = datasets.MNIST(root='./.data',
 train_loader = torch.utils.data.DataLoader(
     dataset     = trainset,
     batch_size  = BATCH_SIZE,
-    shuffle     = True,
+    shuffle     = False,
     num_workers = 2,
     drop_last = True
 )
@@ -47,7 +46,7 @@ train_loader = torch.utils.data.DataLoader(
 test_loader = torch.utils.data.DataLoader(
     dataset     = testset,
     batch_size  = BATCH_SIZE,
-    shuffle     = True,
+    shuffle     = False,
     num_workers = 2,
     drop_last = True
 )
@@ -149,7 +148,9 @@ if __name__=='__main__':
     epoch_List = []
     AE_Loss_List = []
     CNN_Loss_List = []
+    unq_CNN_Loss_List = []
     threshold_List = []
+    crr_ask_rate_List = []
 
     #threshold
     threshold = 0.02
@@ -157,16 +158,16 @@ if __name__=='__main__':
     cnt_under_thres = 0
     cnt_cnn = 0
     cnt_unq_cnn = 0
-    unq_CNN_loss = 2.5
-    Folder_number = "14"
+    unq_CNN_loss = torch.tensor(2.5)
+    CNN_ratio = 15
+    Folder_number = "19"
 
-    sys.stdout = open('./plot/record{}.txt'.format(Folder_number), 'a')
+    # sys.stdout = open('./plot/record{}.txt'.format(Folder_number), 'a')
     print(datetime.now())
     print("Start Threshold:", threshold)
     for epoch in tqdm(range(1, EPOCH+1)):
         crr_cnt_over_thres = 0
         crr_cnt_under_thres = 0
-        crr_ask_rate_List = []
         step_List = []
 
         for step, (data, target) in enumerate(train_loader):
@@ -262,22 +263,26 @@ if __name__=='__main__':
 
 
             elif unq_CNN_loss >= CNN_loss:
-                threshold += 0.0017
+                threshold += 0.0001 * CNN_ratio
                 cnt_cnn += 1
 
+            crr_ask_rate = crr_cnt_over_thres / (crr_cnt_over_thres + crr_cnt_under_thres)
+
             if step % 100 == 0:
-                crr_ask_rate = crr_cnt_over_thres / (crr_cnt_over_thres + crr_cnt_under_thres)
-                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tAE_Loss: {:.6f}\tCNN_Loss: {:.6f}\tAsk_rate: {:.6f}\tthreshold: {:.6f}'.format(
+                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tAE_Loss: {:.6f}\tCNN_Loss: {:.6f}\tAsk_rate: {:.6f}\tthreshold: {:.6f}\tunq CNN/CNN: {:.6f}'.format(
                     epoch, step * len(data), len(train_loader.dataset),
-                           100. * step / len(train_loader), AE_loss.item(), CNN_loss.item(), crr_ask_rate, threshold))
+                           100. * step / len(train_loader), AE_loss.item(), CNN_loss.item(), crr_ask_rate, threshold,cnt_unq_cnn / cnt_cnn))
 
             AE_Loss_List.append(AE_Loss)
             CNN_Loss_List.append(CNN_loss.item())
+            unq_CNN_Loss_List.append(unq_CNN_loss.item())
             threshold_List.append(threshold)
             crr_ask_rate_List.append(crr_ask_rate)
             step_List.append(step)
-        threshold = AE_Loss
 
+
+
+        # threshold = AE_Loss
 
         ask_rate = 100 * cnt_over_thres / (cnt_over_thres + cnt_under_thres)
         #에폭과 Loss_value 출력
@@ -294,6 +299,7 @@ if __name__=='__main__':
         print('Test Loss: {:.4f}, Accuracy: {:.2f}%'.format(test_loss, test_accuracy))
         print('cnt_cnn:', cnt_cnn)
         print('unq_cnt_cnn: ', cnt_unq_cnn)
+        print('CNN_ratio_setting: ', CNN_ratio)
         print()
 
         cnt_over_thres = 0
@@ -301,46 +307,42 @@ if __name__=='__main__':
         cnt_cnn = 0
         cnt_unq_cnn = 0
 
-    # Ask_rate & test_Accuracy per epoch
-    fig1 = plt.subplot(2, 1, 1)
-    plt.plot(epoch_List, ask_rate_List, label="ask_rate", color='red', linestyle="-")
-    plt.plot(epoch_List, Test_Accuracy_List, label="test_Accuracy", color='blue', linestyle="-")
-    plt.title('Ask_rate & test_Accuracy per epoch')
-    plt.xlabel('epoch')
-    plt.ylabel('%')
+    #CNN Loss ratio
+    fig1 = plt.subplot(3, 1, 1)
+    plt.plot(unq_CNN_Loss_List, label="unq_CNN_Loss", color='red', linestyle="-")
+    plt.plot(CNN_Loss_List, label="CNN_Loss", color='blue', linestyle="-")
+    plt.title('CNN Loss ratio(per step)')
     plt.legend()
 
-    #threshold & AE_Loss(per step)
-    fig2 = plt.subplot(2, 1, 2)
+    fig2 = plt.subplot(3, 1, 2)
     plt.plot(AE_Loss_List, label="AE_Loss", color='red', linestyle="-")
     plt.plot(threshold_List, label="Threshold", color='blue', linestyle="-")
     plt.title('threshold & AE_Loss(per step)')
     plt.legend()
 
+    # crr_ask_rate(per step)
+    fig3 = plt.subplot(3, 1, 3)
+    plt.plot(crr_ask_rate_List, label="ask_rate", color='green', linestyle="-")
+    plt.title('crr_ask_rate(per step)')
+    plt.legend()
+
+    plt.tight_layout()
     plt.show()
+    # plt.savefig('./plot/{}.png'.format(Folder_number))
+    # plt.close()
     #
-    #     plt.tight_layout()
-    #     plt.savefig('./plot/{}.png'.format(epoch))
-    #     plt.close()
-    #
-    # fig3 = plt.subplot(2, 1, 1)
-    # plt.plot(epoch_List, ask_rate_List, label="Ask_rate", color='green', linestyle="-")
-    # plt.title('Ask rate')
-    # plt.xlabel('step')
-    # plt.ylabel('rate')
-    # plt.legend()
-    #
-    # fig2 = plt.subplot(2, 1, 2)
-    # plt.plot(epoch_List, Test_Accuracy_List, label="test_accuracy", color='red', linestyle="-")
-    # plt.title('Test Accuracy')
-    # plt.xlabel('step')
-    # plt.ylabel('rate')
+    # # Ask_rate & test_Accuracy per epoch
+    # fig1 = plt.subplot(3, 1, 1)
+    # plt.plot(epoch_List, ask_rate_List, label="ask_rate", color='red', linestyle="-")
+    # plt.plot(epoch_List, Test_Accuracy_List, label="test_Accuracy", color='blue', linestyle="-")
+    # plt.title('Ask_rate & test_Accuracy(per epoch)')
+    # plt.xlabel('epoch')
+    # plt.ylabel('%')
     # plt.legend()
     #
     # plt.show()
-    #
-    plt.tight_layout()
-    plt.savefig('./plot/{}/graph.png'.format(Folder_number))
-    plt.close()
+    # plt.tight_layout()
+    # plt.savefig('./plot/{}/graph.png'.format(Folder_number))
+    # plt.close()
 
 
