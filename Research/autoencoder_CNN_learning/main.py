@@ -162,7 +162,7 @@ if __name__=='__main__':
     CNN_ratio = 15
     Folder_number = "19"
 
-    # sys.stdout = open('./plot/record{}.txt'.format(Folder_number), 'a')
+    sys.stdout = open('./plot/record{}_batch1.txt'.format(Folder_number), 'a')
     print(datetime.now())
     print("Start Threshold:", threshold)
     for epoch in tqdm(range(1, EPOCH+1)):
@@ -327,9 +327,9 @@ if __name__=='__main__':
     plt.legend()
 
     plt.tight_layout()
-    plt.show()
-    # plt.savefig('./plot/{}.png'.format(Folder_number))
-    # plt.close()
+    # plt.show()
+    plt.savefig('./plot/{}_batch1.png'.format(Folder_number))
+    plt.close()
     #
     # # Ask_rate & test_Accuracy per epoch
     # fig1 = plt.subplot(3, 1, 1)
