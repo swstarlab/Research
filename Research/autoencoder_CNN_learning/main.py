@@ -19,7 +19,7 @@ from tqdm import tqdm
 
 # 하이퍼파라미터
 EPOCH = 1
-BATCH_SIZE = 64
+BATCH_SIZE = 1
 USE_CUDA = torch.cuda.is_available()
 DEVICE = torch.device("cuda" if USE_CUDA else "cpu")
 
@@ -190,7 +190,7 @@ if __name__=='__main__':
 
             #AE_Loss 바탕으로 물어볼지, 스스로 추론할지 결정
             if AE_Loss >= threshold: #물어보기
-                # # 사람에게 물어볼 수 있도록 이미지 출력
+                # 사람에게 물어볼 수 있도록 이미지 출력
                 # _view_data = x.view(-1, 28 * 28)
                 # _view_data = _view_data.type(torch.FloatTensor) / 255.
                 # test_x = _view_data.to(DEVICE)
