@@ -131,6 +131,28 @@ def createDirectory(directory):
     except OSError:
         print("Error: Failed to create the directory.")
 
+def pretrain(model, train_loader, optimizer, epoch):
+    model.train()
+    for batch_idx, (data, target) in enumerate(train_loader):
+        data, target = data.to(DEVICE), target.to(DEVICE)
+        optimizer.zero_grad()
+        output = model(data)
+        loss = F.cross_entropy(output, target)
+        loss.backward()
+        optimizer.step()
+
+        CNN_Loss_List.append(loss)
+        if batch_idx % 200 == 0:
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                epoch, batch_idx * len(data), len(train_loader.dataset),
+                100. * batch_idx / len(train_loader), loss.item()))
+
+        if batch_idx >= 10:
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                epoch, batch_idx * len(data), len(train_loader.dataset),
+                       100. * batch_idx / len(train_loader), loss.item()))
+            break
+
 if __name__=='__main__':
     freeze_support()
     # 랜덤시드 고정
@@ -162,9 +184,17 @@ if __name__=='__main__':
     CNN_ratio = 15
     Folder_number = "19"
 
-    sys.stdout = open('./plot/record{}_batch1.txt'.format(Folder_number), 'a')
+    # sys.stdout = open('./plot/record{}_batch1.txt'.format(Folder_number), 'a')
     print(datetime.now())
     print("Start Threshold:", threshold)
+
+    for epoch in range(1, EPOCH + 1):
+        pretrain(model, train_loader, optimizer_CNN, epoch)
+        test_loss, test_accuracy = evaluate(model, test_loader)
+
+        print('[{}] Test Loss: {:.4f}, Accuracy: {:.2f}%'.format(
+            epoch, test_loss, test_accuracy))
+
     for epoch in tqdm(range(1, EPOCH+1)):
         crr_cnt_over_thres = 0
         crr_cnt_under_thres = 0
@@ -268,7 +298,7 @@ if __name__=='__main__':
 
             crr_ask_rate = crr_cnt_over_thres / (crr_cnt_over_thres + crr_cnt_under_thres)
 
-            if step % 100 == 0:
+            if step % 3000 == 0:
                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tAE_Loss: {:.6f}\tCNN_Loss: {:.6f}\tAsk_rate: {:.6f}\tthreshold: {:.6f}\tunq CNN/CNN: {:.6f}'.format(
                     epoch, step * len(data), len(train_loader.dataset),
                            100. * step / len(train_loader), AE_loss.item(), CNN_loss.item(), crr_ask_rate, threshold,cnt_unq_cnn / cnt_cnn))
@@ -279,8 +309,6 @@ if __name__=='__main__':
             threshold_List.append(threshold)
             crr_ask_rate_List.append(crr_ask_rate)
             step_List.append(step)
-
-
 
         # threshold = AE_Loss
 
@@ -327,9 +355,9 @@ if __name__=='__main__':
     plt.legend()
 
     plt.tight_layout()
-    # plt.show()
-    plt.savefig('./plot/{}_batch1.png'.format(Folder_number))
-    plt.close()
+    plt.show()
+    # plt.savefig('./plot/{}_batch1.png'.format(Folder_number))
+    # plt.close()
     #
     # # Ask_rate & test_Accuracy per epoch
     # fig1 = plt.subplot(3, 1, 1)
