@@ -188,7 +188,7 @@ if __name__=='__main__':
     print(datetime.now())
     print("Start Threshold:", threshold)
 
-    for epoch in range(1, EPOCH + 1):
+    for epoch in range(1, 10):
         pretrain(model, train_loader, optimizer_CNN, epoch)
         test_loss, test_accuracy = evaluate(model, test_loader)
 
