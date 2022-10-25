@@ -125,7 +125,7 @@ def evaluate(model, test_loader):
 # ## 코드 돌려보기
 # 자, 이제 모든 준비가 끝났습니다. 코드를 돌려서 실제로 학습이 되는지 확인해봅시다!
 
-sys.stdout = open('./plot/record_Compare_CNN_01 data508.txt', 'a')
+# sys.stdout = open('./plot/record_Compare_CNN_01 data508.txt', 'a')
 print(datetime.now())
 CNN_Loss_List = []
 for epoch in range(1, EPOCHS + 1):
@@ -141,6 +141,8 @@ for epoch in range(1, EPOCHS + 1):
     plt.title('CNN Loss ratio(per step)')
     plt.legend()
     plt.tight_layout()
-    plt.savefig('./plot/Compare_CNN_graph data{}.png'.format(508))
+    # plt.savefig('./plot/Compare_CNN_graph data{}.png'.format(508))
+    plt.show()
     plt.close()
+
 
