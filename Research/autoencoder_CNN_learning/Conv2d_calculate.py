@@ -1,8 +1,8 @@
-stride = 1
-kernel_size = 5
-padding = 0
+stride = 2
+kernel_size = 8
+padding = 1
 dilation = 1
-H_in = 28
+H_in = 32
 depth = 2
 
 
@@ -11,3 +11,8 @@ for i in range(depth):
     print("H_out: {}, depth: {}" .format(H_out, i))
     H_in = H_out
 
+H_out = H_out**2
+Linear_size = H_out*20
+
+print(H_out)
+print(Linear_size)
