@@ -103,7 +103,7 @@ if __name__=='__main__':
     # 랜덤시드 고정
     total_Ask_rate_List = []
     total_Accuracy_List = []
-    for i in tqdm(range(3)):
+    for i in tqdm(range(1000)):
         random_seed = i
         torch.manual_seed(random_seed)  # torch
         torch.cuda.manual_seed(random_seed)
