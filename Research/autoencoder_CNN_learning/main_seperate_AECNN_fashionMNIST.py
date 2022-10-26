@@ -101,7 +101,7 @@ class Net(nn.Module):
         return x
 
 model     = Net().to(DEVICE)
-optimizer_CNN = optim.Adam(model.parameters(), lr=0.001)
+optimizer_CNN = optim.Adam(model.parameters(), lr=0.0005)
 
 def evaluate(model, test_loader):
     model.eval()
@@ -130,28 +130,6 @@ def createDirectory(directory):
             os.makedirs(directory)
     except OSError:
         print("Error: Failed to create the directory.")
-
-def pretrain(model, train_loader, optimizer, epoch):
-    model.train()
-    for batch_idx, (data, target) in enumerate(train_loader):
-        data, target = data.to(DEVICE), target.to(DEVICE)
-        optimizer.zero_grad()
-        output = model(data)
-        loss = F.cross_entropy(output, target)
-        loss.backward()
-        optimizer.step()
-
-        CNN_Loss_List.append(loss)
-        if batch_idx % 200 == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader), loss.item()))
-
-        if batch_idx >= 10:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(data), len(train_loader.dataset),
-                       100. * batch_idx / len(train_loader), loss.item()))
-            break
 
 if __name__=='__main__':
     freeze_support()
