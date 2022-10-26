@@ -17,9 +17,6 @@ from datetime import datetime
 from tqdm import tqdm
 import pandas as pd
 
-show_debug =False
-
-
 #AutoEncoder
 class Autoencoder(nn.Module):
     def __init__(self):
@@ -98,12 +95,15 @@ def createDirectory(directory):
         print("Error: Failed to create the directory.")
 
 
+
 if __name__=='__main__':
     freeze_support()
-    # 랜덤시드 고정
+
     total_Ask_rate_List = []
     total_Accuracy_List = []
-    for i in tqdm(range(1000)):
+    total_cnt_over_thres_List = []
+
+    for i in tqdm(range(3)):
         random_seed = i
         torch.manual_seed(random_seed)  # torch
         torch.cuda.manual_seed(random_seed)
@@ -118,8 +118,25 @@ if __name__=='__main__':
         BATCH_SIZE = 64
         USE_CUDA = torch.cuda.is_available()
         DEVICE = torch.device("cuda" if USE_CUDA else "cpu")
+        save_file = False
+        save_csv = True
+        threshold = 0.02
+        CNN_ratio = 15
 
+        #초기값
+        cnt_over_thres = 0
+        cnt_under_thres = 0
+        cnt_cnn = 0
+        cnt_unq_cnn = 0
+        unq_CNN_loss = torch.tensor(2.5)
+        Folder_number = "19"
 
+        #List
+        AE_Loss_List = []
+        CNN_Loss_List = []
+        unq_CNN_Loss_List = []
+        threshold_List = []
+        crr_ask_rate_List = []
 
         # MNIST 데이터셋
         trainset = datasets.MNIST(
@@ -156,41 +173,13 @@ if __name__=='__main__':
         model = Net().to(DEVICE)
         optimizer_CNN = optim.Adam(model.parameters(), lr=0.0005)
 
-        Test_Accuracy_List = []
-        ask_rate_List = []
-        epoch_List = []
-        AE_Loss_List = []
-        CNN_Loss_List = []
-        unq_CNN_Loss_List = []
-        threshold_List = []
-        crr_ask_rate_List = []
-
-
-        #threshold
-        threshold = 0.02
-        cnt_over_thres = 0
-        cnt_under_thres = 0
-        cnt_cnn = 0
-        cnt_unq_cnn = 0
-        unq_CNN_loss = torch.tensor(2.5)
-        CNN_ratio = 15
-        Folder_number = "19"
-
-        # sys.stdout = open('./plot/record{}.txt'.format(Folder_number), 'a')
-        # print(datetime.now())
-        # print("Start Threshold:", threshold)
-
-        # for epoch in range(1, 10):
-        #     pretrain(model, train_loader, optimizer_CNN, epoch)
-        #     test_loss, test_accuracy = evaluate(model, test_loader)
-        #
-        #     print('[{}] Test Loss: {:.4f}, Accuracy: {:.2f}%'.format(
-        #         epoch, test_loss, test_accuracy))
+        if save_file:
+            sys.stdout = open('./plot/record{}.txt'.format(random_seed), 'a')
+            print(datetime.now())
 
         for epoch in range(1, EPOCH+1):
             crr_cnt_over_thres = 0
             crr_cnt_under_thres = 0
-            step_List = []
 
             for step, (data, target) in enumerate(train_loader):
                 model.eval()
@@ -283,14 +272,13 @@ if __name__=='__main__':
                     threshold -= 0.0001
                     cnt_unq_cnn += 1
 
-
                 elif unq_CNN_loss >= CNN_loss:
                     threshold += 0.0001 * CNN_ratio
                     cnt_cnn += 1
 
                 crr_ask_rate = crr_cnt_over_thres / (crr_cnt_over_thres + crr_cnt_under_thres)
 
-                if show_debug:
+                if save_file == False and save_csv == False:
                     if step % 200 == 0:
                         print('Train Epoch: {} [{}/{} ({:.0f}%)]\tAE_Loss: {:.6f}\tCNN_Loss: {:.6f}\tAsk_rate: {:.6f}\tthreshold: {:.6f}\tunq CNN/CNN: {:.6f}'.format(
                             epoch, step * len(data), len(train_loader.dataset),
@@ -301,7 +289,6 @@ if __name__=='__main__':
                 unq_CNN_Loss_List.append(unq_CNN_loss.item())
                 threshold_List.append(threshold)
                 crr_ask_rate_List.append(crr_ask_rate)
-                step_List.append(step)
 
             # threshold = AE_Loss
 
@@ -311,17 +298,17 @@ if __name__=='__main__':
             test_loss, test_accuracy = evaluate(model, test_loader)
             total_Accuracy_List.append(test_accuracy)
             total_Ask_rate_List.append(ask_rate)
+            total_cnt_over_thres_List.append(cnt_over_thres)
 
-            if show_debug:
+            if save_file == False and save_csv == False:
                 print("[Epoch {}]".format(epoch))
                 print("cnt_over_thres:", cnt_over_thres)
                 print("cnt_under_thres:", cnt_under_thres)
                 print('cnt_cnn:', cnt_cnn)
                 print('unq_cnt_cnn: ', cnt_unq_cnn)
-                print('CNN_ratio_setting: ', CNN_ratio)
                 print()
 
-            print(i, "Ask_rate: {:.2f}%, Accuracy: {:.2f}%".format(ask_rate, test_accuracy))
+            print("Ask_rate: {:.2f}%, Accuracy: {:.2f}%".format(ask_rate, test_accuracy))
 
             # print()
             cnt_over_thres = 0
@@ -329,31 +316,36 @@ if __name__=='__main__':
             cnt_cnn = 0
             cnt_unq_cnn = 0
 
-        df = pd.DataFrame(total_Ask_rate_List, columns=['Ask_rate'])
-        df['Accuracy'] = total_Accuracy_List
-        df.to_csv('./plot/{}.csv'.format("01"))
+        if save_csv:
+            df = pd.DataFrame(total_Ask_rate_List, columns=['Ask_rate'])
+            df['Accuracy'] = total_Accuracy_List
+            df['cnt_over_thres'] = total_cnt_over_thres_List
+            df.to_csv('./plot/{}.csv'.format("02"))
 
-        #CNN Loss ratio
-        # fig1 = plt.subplot(3, 1, 1)
-        # plt.plot(unq_CNN_Loss_List, label="unq_CNN_Loss", color='red', linestyle="-")
-        # plt.plot(CNN_Loss_List, label="CNN_Loss", color='blue', linestyle="-")
-        # plt.title('CNN Loss ratio(per step)')
-        # plt.legend()
-        #
-        # fig2 = plt.subplot(3, 1, 2)
-        # plt.plot(AE_Loss_List, label="AE_Loss", color='red', linestyle="-")
-        # plt.plot(threshold_List, label="Threshold", color='blue', linestyle="-")
-        # plt.title('threshold & AE_Loss(per step)')
-        # plt.legend()
-        #
-        # # crr_ask_rate(per step)
-        # fig3 = plt.subplot(3, 1, 3)
-        # plt.plot(crr_ask_rate_List, label="ask_rate", color='green', linestyle="-")
-        # plt.title('crr_ask_rate(per step)')
-        # plt.legend()
-        #
-        # plt.tight_layout()
-        # plt.show()
-        # # plt.savefig('./plot/{}.png'.format(Folder_number))
-        # # plt.close()
+        #plot
+        fig1 = plt.subplot(3, 1, 1)
+        plt.plot(unq_CNN_Loss_List, label="unq_CNN_Loss", color='red', linestyle="-")
+        plt.plot(CNN_Loss_List, label="CNN_Loss", color='blue', linestyle="-")
+        plt.title('CNN Loss ratio(per step)')
+        plt.legend()
 
+        fig2 = plt.subplot(3, 1, 2)
+        plt.plot(AE_Loss_List, label="AE_Loss", color='red', linestyle="-")
+        plt.plot(threshold_List, label="Threshold", color='blue', linestyle="-")
+        plt.title('threshold & AE_Loss(per step)')
+        plt.legend()
+
+        # crr_ask_rate(per step)
+        fig3 = plt.subplot(3, 1, 3)
+        plt.plot(crr_ask_rate_List, label="ask_rate", color='green', linestyle="-")
+        plt.title('crr_ask_rate(per step)')
+        plt.legend()
+        plt.tight_layout()
+
+        if save_file:
+            plt.savefig('./plot/rs{}.png'.format(random_seed))
+
+        elif save_file == False and save_csv==False:
+            plt.show()
+
+        plt.close()

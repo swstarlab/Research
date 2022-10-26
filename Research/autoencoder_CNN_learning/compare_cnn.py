@@ -13,15 +13,27 @@ from torchvision import transforms, datasets
 import sys
 from datetime import datetime
 import matplotlib.pyplot as plt
+import numpy as np
+import random
 
+random_seed = 22
+torch.manual_seed(random_seed)  # torch
+torch.cuda.manual_seed(random_seed)
+torch.cuda.manual_seed_all(random_seed)  # if use multi-GPU
+torch.backends.cudnn.deterministic = True  # cudnn
+torch.backends.cudnn.benchmark = False  # cudnn
+np.random.seed(random_seed)  # numpy
+random.seed(random_seed)  # random
 
 USE_CUDA = torch.cuda.is_available()
 DEVICE = torch.device("cuda" if USE_CUDA else "cpu")
 
-
 EPOCHS     = 1
 BATCH_SIZE = 64
+save_file = False
 
+if save_file:
+    sys.stdout = open('./plot/compare_cnn_record{}.txt'.format(random_seed), 'a')
 
 # ## 데이터셋 불러오기
 
@@ -65,15 +77,13 @@ class Net(nn.Module):
         return x
 
 
-# ## 하이퍼파라미터 
-# `to()` 함수는 모델의 파라미터들을 지정한 곳으로 보내는 역할을 합니다. 일반적으로 CPU 1개만 사용할 경우 필요는 없지만, GPU를 사용하고자 하는 경우 `to("cuda")`로 지정하여 GPU로 보내야 합니다. 지정하지 않을 경우 계속 CPU에 남아 있게 되며 빠른 훈련의 이점을 누리실 수 없습니다.
-# 최적화 알고리즘으로 파이토치에 내장되어 있는 `optim.SGD`를 사용하겠습니다.
-
+# ## 하이퍼파라미터
 model     = Net().to(DEVICE)
-optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
 
 # ## 학습하기
+
 
 def train(model, train_loader, optimizer, epoch):
     model.train()
@@ -85,13 +95,12 @@ def train(model, train_loader, optimizer, epoch):
         loss.backward()
         optimizer.step()
 
-        CNN_Loss_List.append(loss)
         if batch_idx % 200 == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.item()))
 
-        if batch_idx >= 508:
+        if batch_idx >= 292:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                        100. * batch_idx / len(train_loader), loss.item()))
@@ -127,22 +136,12 @@ def evaluate(model, test_loader):
 
 # sys.stdout = open('./plot/record_Compare_CNN_01 data508.txt', 'a')
 print(datetime.now())
-CNN_Loss_List = []
+cnt_over_thres = 0
 for epoch in range(1, EPOCHS + 1):
-
     train(model, train_loader, optimizer, epoch)
     test_loss, test_accuracy = evaluate(model, test_loader)
     
     print('[{}] Test Loss: {:.4f}, Accuracy: {:.2f}%'.format(
           epoch, test_loss, test_accuracy))
-
-    fig1 = plt.subplot(1, 1, 1)
-    plt.plot(CNN_Loss_List, label="CNN_Loss", color='blue', linestyle="-")
-    plt.title('CNN Loss ratio(per step)')
-    plt.legend()
-    plt.tight_layout()
-    # plt.savefig('./plot/Compare_CNN_graph data{}.png'.format(508))
-    plt.show()
-    plt.close()
 
 

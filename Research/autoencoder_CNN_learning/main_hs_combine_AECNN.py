@@ -16,6 +16,15 @@ import sys
 from datetime import datetime
 from tqdm import tqdm
 
+# 랜덤시드 고정
+random_seed = 0
+torch.manual_seed(random_seed)  # torch
+torch.cuda.manual_seed(random_seed)
+torch.cuda.manual_seed_all(random_seed)  # if use multi-GPU
+torch.backends.cudnn.deterministic = True  # cudnn
+torch.backends.cudnn.benchmark = False  # cudnn
+np.random.seed(random_seed)  # numpy
+random.seed(random_seed)  # random
 
 # 하이퍼파라미터
 EPOCH = 1
@@ -119,7 +128,7 @@ def evaluate(model, test_loader):
     with torch.no_grad():
         for data, target in test_loader:
             data, target = data.to(DEVICE), target.to(DEVICE)
-            output = model(data)
+            output, _ = model(data)
 
             # 배치 오차를 합산
             test_loss += F.cross_entropy(output, target,
@@ -135,15 +144,7 @@ def evaluate(model, test_loader):
 
 if __name__=='__main__':
     freeze_support()
-    # 랜덤시드 고정
-    random_seed = 0
-    torch.manual_seed(random_seed)  # torch
-    torch.cuda.manual_seed(random_seed)
-    torch.cuda.manual_seed_all(random_seed)  # if use multi-GPU
-    torch.backends.cudnn.deterministic = True  # cudnn
-    torch.backends.cudnn.benchmark = False  # cudnn
-    np.random.seed(random_seed)  # numpy
-    random.seed(random_seed)  # random
+
 
     Test_Accuracy_List = []
     ask_rate_List = []
@@ -161,7 +162,7 @@ if __name__=='__main__':
     cnt_cnn = 0
     cnt_unq_cnn = 0
     unq_CNN_loss = torch.tensor(2.5)
-    CNN_ratio = 15
+    CNN_ratio = 20
     Folder_number = "19"
 
     # sys.stdout = open('./plot/record{}_batch1.txt'.format(Folder_number), 'a')
@@ -189,9 +190,14 @@ if __name__=='__main__':
             model.train()
             optimizer_CNN.zero_grad()
             # optimizer_AE.zero_grad()
-            AE_loss.backward()
-            optimizer_CNN.step()
+            # AE_loss.backward()
+            # optimizer_CNN.step()
+            total_Loss = AE_loss
             AE_Loss = AE_loss.item()
+            CNN_loss = F.cross_entropy(encoded, target)
+            pred = encoded.max(1, keepdim=True)[1]
+            pred = pred.reshape(-1)
+            unq_CNN_loss = F.cross_entropy(encoded, pred)
 
             #AE_Loss 바탕으로 물어볼지, 스스로 추론할지 결정
             if AE_Loss >= threshold: #물어보기
@@ -220,9 +226,10 @@ if __name__=='__main__':
                 # optimizer_CNN.zero_grad()
                 # output, _ = model(data)
                 # model.train()
-                CNN_loss = F.cross_entropy(encoded, target)#모의구동시에는 target, 실사용시에는 label
-                CNN_loss.backward()
-                optimizer_CNN.step()
+                #모의구동시에는 target, 실사용시에는 label
+                # CNN_loss.backward()
+                # optimizer_CNN.step()
+                total_Loss += CNN_loss
 
                 #물어본 횟수 증가
                 cnt_over_thres += 1
@@ -248,12 +255,11 @@ if __name__=='__main__':
 
                 # optimizer_CNN.zero_grad()
                 # output = model(data)
-                pred = encoded.max(1, keepdim=True)[1]
-                pred = pred.reshape(-1)
+
                 # model.train()
-                unq_CNN_loss = F.cross_entropy(encoded, pred)
-                unq_CNN_loss.backward()
-                optimizer_CNN.step()
+
+                total_Loss += unq_CNN_loss
+
 
                 # print(AE_Loss)
                 # input("it is {}".format(pred))  # 자신이 추론한 거 알려주기
@@ -263,20 +269,23 @@ if __name__=='__main__':
                 crr_cnt_under_thres += 1
 
             if unq_CNN_loss < CNN_loss and threshold > 0.01:
-                threshold -= 0.0001
+                threshold -= 0.001
                 cnt_unq_cnn += 1
 
 
-            elif unq_CNN_loss >= CNN_loss:
-                threshold += 0.0001 * CNN_ratio
+            if unq_CNN_loss >= CNN_loss:
+                threshold += 0.001
                 cnt_cnn += 1
 
             crr_ask_rate = crr_cnt_over_thres / (crr_cnt_over_thres + crr_cnt_under_thres)
 
-            if step % 3000 == 0:
-                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tAE_Loss: {:.6f}\tCNN_Loss: {:.6f}\tAsk_rate: {:.6f}\tthreshold: {:.6f}\tunq CNN/CNN: {:.6f}'.format(
+            if step % 200 == 0:
+                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tAE_Loss: {:.6f}\tCNN_Loss: {:.6f}\tAsk_rate: {:.6f}\tthreshold: {:.6f}'.format(
                     epoch, step * len(data), len(train_loader.dataset),
-                           100. * step / len(train_loader), AE_loss.item(), CNN_loss.item(), crr_ask_rate, threshold,cnt_unq_cnn / cnt_cnn))
+                           100. * step / len(train_loader), AE_loss.item(), CNN_loss.item(), crr_ask_rate, threshold))
+
+            total_Loss.backward()
+            optimizer_CNN.step()
 
             AE_Loss_List.append(AE_Loss)
             CNN_Loss_List.append(CNN_loss.item())
