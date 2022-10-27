@@ -158,8 +158,8 @@ if __name__=='__main__':
     CNN_ratio = 15
     Folder_number = "19"
 
-    sys.stdout = open('./plot/cifar10Mnist_record{}.txt'.format(Folder_number), 'a')
-    print(datetime.now())
+    # sys.stdout = open('./plot/cifar10Mnist_record{}.txt'.format(Folder_number), 'a')
+    # print(datetime.now())
     print("Start Threshold:", threshold)
 
     for epoch in tqdm(range(1, EPOCH+1)):
@@ -322,8 +322,8 @@ if __name__=='__main__':
     plt.legend()
 
     plt.tight_layout()
-    # plt.show()
-    plt.savefig('./plot/cifar10Mnist_graph{}.png'.format(Folder_number))
+    plt.show()
+    # plt.savefig('./plot/cifar10Mnist_graph{}.png'.format(Folder_number))
     plt.close()
     #
     # # Ask_rate & test_Accuracy per epoch

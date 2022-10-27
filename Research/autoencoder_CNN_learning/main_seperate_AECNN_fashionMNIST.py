@@ -134,7 +134,7 @@ def createDirectory(directory):
 if __name__=='__main__':
     freeze_support()
     # 랜덤시드 고정
-    random_seed = 0
+    random_seed = 22
     torch.manual_seed(random_seed)  # torch
     torch.cuda.manual_seed(random_seed)
     torch.cuda.manual_seed_all(random_seed)  # if use multi-GPU
