@@ -26,7 +26,7 @@ DEVICE = torch.device("cuda" if USE_CUDA else "cpu")
 EPOCHS     = 1
 BATCH_SIZE = 64
 save_file = False
-save_csv = True
+save_csv = False
 
 # ## 데이터셋 불러오기
 
@@ -91,10 +91,10 @@ def train(model, train_loader, optimizer, epoch):
                     epoch, batch_idx * len(data), len(train_loader.dataset),
                     100. * batch_idx / len(train_loader), loss.item()))
 
-        if batch_idx >= int(cnt_over_thres_list[i]):
-            # print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-            #     epoch, batch_idx * len(data), len(train_loader.dataset),
-            #            100. * batch_idx / len(train_loader), loss.item()))
+        if batch_idx >= 532:
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                epoch, batch_idx * len(data), len(train_loader.dataset),
+                       100. * batch_idx / len(train_loader), loss.item()))
             break
 
 
@@ -135,44 +135,44 @@ total_Ask_List = []
 total_Accuracy_List = []
 
 
-for i in tqdm(range(1000)):
-    random_seed = i
-    torch.manual_seed(random_seed)  # torch
-    torch.cuda.manual_seed(random_seed)
-    torch.cuda.manual_seed_all(random_seed)  # if use multi-GPU
-    torch.backends.cudnn.deterministic = True  # cudnn
-    torch.backends.cudnn.benchmark = False  # cudnn
-    np.random.seed(random_seed)  # numpy
-    random.seed(random_seed)  # random
+random_seed = 23
+torch.manual_seed(random_seed)  # torch
+torch.cuda.manual_seed(random_seed)
+torch.cuda.manual_seed_all(random_seed)  # if use multi-GPU
+torch.backends.cudnn.deterministic = True  # cudnn
+torch.backends.cudnn.benchmark = False  # cudnn
+np.random.seed(random_seed)  # numpy
+random.seed(random_seed)  # random
 
-    if save_file:
-        sys.stdout = open('./plot/compare_cnn_record{}.txt'.format(random_seed), 'a')
+if save_file:
+    sys.stdout = open('./plot/compare_cnn_record{}.txt'.format(random_seed), 'a')
 
-    for epoch in range(1, EPOCHS + 1):
-        train(model, train_loader, optimizer, epoch)
-        test_loss, test_accuracy = evaluate(model, test_loader)
+for epoch in range(1, EPOCHS + 1):
+    train(model, train_loader, optimizer, epoch)
+    test_loss, test_accuracy = evaluate(model, test_loader)
 
-        total_Accuracy_List.append(test_accuracy)
-        total_Ask_List.append(cnt_over_thres_list[i])
-        print('[{}] Test Loss: {:.4f}, Accuracy: {:.2f}%'.format(
-              epoch, test_loss, test_accuracy))
+    total_Accuracy_List.append(test_accuracy)
+    total_Ask_List.append(cnt_over_thres_list[23])
+    print('[{}] Test Loss: {:.4f}, Accuracy: {:.2f}%'.format(
+          epoch, test_loss, test_accuracy))
 
-df = pd.DataFrame(total_Accuracy_List, columns=['Accuracy'])
-df['Ask_List'] = total_Ask_List
-df.to_csv('./plot/cnn_mnist{}.csv'.format("02"))
+if save_csv:
+    df = pd.DataFrame(total_Accuracy_List, columns=['Accuracy'])
+    df['Ask_List'] = total_Ask_List
+    df.to_csv('./plot/cnn_mnist{}.csv'.format("02"))
 
-     #plot
-            # fig1 = plt.subplot(3, 1, 1)
-            # plt.plot(unq_CNN_Loss_List, label="unq_CNN_Loss", color='red', linestyle="-")
-            # plt.plot(CNN_Loss_List, label="CNN_Loss", color='blue', linestyle="-")
-            # plt.title('CNN Loss ratio(per step)')
-            # plt.legend()
-            #
-            #
-            # if save_file:
-            #     plt.savefig('./plot/rs{}.png'.format(random_seed))
-            #
-            # elif save_file == False and save_csv==False:
-            #     plt.show()
-            #
-            # plt.close()
+ #plot
+        # fig1 = plt.subplot(3, 1, 1)
+        # plt.plot(unq_CNN_Loss_List, label="unq_CNN_Loss", color='red', linestyle="-")
+        # plt.plot(CNN_Loss_List, label="CNN_Loss", color='blue', linestyle="-")
+        # plt.title('CNN Loss ratio(per step)')
+        # plt.legend()
+        #
+        #
+        # if save_file:
+        #     plt.savefig('./plot/rs{}.png'.format(random_seed))
+        #
+        # elif save_file == False and save_csv==False:
+        #     plt.show()
+        #
+        # plt.close()
