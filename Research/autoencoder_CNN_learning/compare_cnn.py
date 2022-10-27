@@ -5,6 +5,8 @@
 # Convolutional Neural Network (CNN) 을 이용하여 패션아이템 구분 성능을 높여보겠습니다.
 
 import os
+
+import pandas as pd
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -15,15 +17,8 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 import random
-
-random_seed = 22
-torch.manual_seed(random_seed)  # torch
-torch.cuda.manual_seed(random_seed)
-torch.cuda.manual_seed_all(random_seed)  # if use multi-GPU
-torch.backends.cudnn.deterministic = True  # cudnn
-torch.backends.cudnn.benchmark = False  # cudnn
-np.random.seed(random_seed)  # numpy
-random.seed(random_seed)  # random
+import matplotlib as plt
+from tqdm import tqdm
 
 USE_CUDA = torch.cuda.is_available()
 DEVICE = torch.device("cuda" if USE_CUDA else "cpu")
@@ -31,9 +26,7 @@ DEVICE = torch.device("cuda" if USE_CUDA else "cpu")
 EPOCHS     = 1
 BATCH_SIZE = 64
 save_file = False
-
-if save_file:
-    sys.stdout = open('./plot/compare_cnn_record{}.txt'.format(random_seed), 'a')
+save_csv = True
 
 # ## 데이터셋 불러오기
 
@@ -81,10 +74,7 @@ class Net(nn.Module):
 model     = Net().to(DEVICE)
 optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
-
 # ## 학습하기
-
-
 def train(model, train_loader, optimizer, epoch):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
@@ -95,15 +85,16 @@ def train(model, train_loader, optimizer, epoch):
         loss.backward()
         optimizer.step()
 
-        if batch_idx % 200 == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader), loss.item()))
+        if save_csv == False and save_file == False:
+            if batch_idx % 200 == 0:
+                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                    epoch, batch_idx * len(data), len(train_loader.dataset),
+                    100. * batch_idx / len(train_loader), loss.item()))
 
-        if batch_idx >= 292:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(data), len(train_loader.dataset),
-                       100. * batch_idx / len(train_loader), loss.item()))
+        if batch_idx >= int(cnt_over_thres_list[i]):
+            # print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+            #     epoch, batch_idx * len(data), len(train_loader.dataset),
+            #            100. * batch_idx / len(train_loader), loss.item()))
             break
 
 
@@ -134,14 +125,54 @@ def evaluate(model, test_loader):
 # ## 코드 돌려보기
 # 자, 이제 모든 준비가 끝났습니다. 코드를 돌려서 실제로 학습이 되는지 확인해봅시다!
 
-# sys.stdout = open('./plot/record_Compare_CNN_01 data508.txt', 'a')
-print(datetime.now())
+AECNN_csv = pd.read_csv('./plot/02.csv', names=['seed', 'Ask_rate', 'Accuracy', 'cnt_over_thres'])
+AECNN_csv = AECNN_csv.drop([0], axis = 0)
+cnt_over_thres_csv = AECNN_csv['cnt_over_thres']
+cnt_over_thres = cnt_over_thres_csv.values
+cnt_over_thres_list = cnt_over_thres.tolist()
 cnt_over_thres = 0
-for epoch in range(1, EPOCHS + 1):
-    train(model, train_loader, optimizer, epoch)
-    test_loss, test_accuracy = evaluate(model, test_loader)
-    
-    print('[{}] Test Loss: {:.4f}, Accuracy: {:.2f}%'.format(
-          epoch, test_loss, test_accuracy))
+total_Ask_List = []
+total_Accuracy_List = []
 
 
+for i in tqdm(range(1000)):
+    random_seed = i
+    torch.manual_seed(random_seed)  # torch
+    torch.cuda.manual_seed(random_seed)
+    torch.cuda.manual_seed_all(random_seed)  # if use multi-GPU
+    torch.backends.cudnn.deterministic = True  # cudnn
+    torch.backends.cudnn.benchmark = False  # cudnn
+    np.random.seed(random_seed)  # numpy
+    random.seed(random_seed)  # random
+
+    if save_file:
+        sys.stdout = open('./plot/compare_cnn_record{}.txt'.format(random_seed), 'a')
+
+    for epoch in range(1, EPOCHS + 1):
+        train(model, train_loader, optimizer, epoch)
+        test_loss, test_accuracy = evaluate(model, test_loader)
+
+        total_Accuracy_List.append(test_accuracy)
+        total_Ask_List.append(cnt_over_thres_list[i])
+        print('[{}] Test Loss: {:.4f}, Accuracy: {:.2f}%'.format(
+              epoch, test_loss, test_accuracy))
+
+df = pd.DataFrame(total_Accuracy_List, columns=['Accuracy'])
+df['Ask_List'] = total_Ask_List
+df.to_csv('./plot/cnn_mnist{}.csv'.format("02"))
+
+     #plot
+            # fig1 = plt.subplot(3, 1, 1)
+            # plt.plot(unq_CNN_Loss_List, label="unq_CNN_Loss", color='red', linestyle="-")
+            # plt.plot(CNN_Loss_List, label="CNN_Loss", color='blue', linestyle="-")
+            # plt.title('CNN Loss ratio(per step)')
+            # plt.legend()
+            #
+            #
+            # if save_file:
+            #     plt.savefig('./plot/rs{}.png'.format(random_seed))
+            #
+            # elif save_file == False and save_csv==False:
+            #     plt.show()
+            #
+            # plt.close()
