@@ -103,7 +103,7 @@ if __name__=='__main__':
     total_Accuracy_List = []
     total_cnt_over_thres_List = []
 
-    for i in tqdm(range(3)):
+    for i in tqdm(range(1000)):
         random_seed = i
         torch.manual_seed(random_seed)  # torch
         torch.cuda.manual_seed(random_seed)
