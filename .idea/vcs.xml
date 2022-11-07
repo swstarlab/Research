@@ -2,6 +2,9 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Research/LBA/LBA-DramaQG" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Research/LBA/Scene-Graph-Extraction" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Research/LBA/ood-diffusion" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Research/UR-5" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Research/devide_team" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Research/hsr_conversation_learning" vcs="Git" />
