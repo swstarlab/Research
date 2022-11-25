@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="VcsDirectoryMappings">
-    <mapping directory="$PROJECT_DIR$/.." vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/UR-5" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/devide_team" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/hsr_conversation_learning" vcs="Git" />
-  </component>
-</project>
